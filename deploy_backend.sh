@@ -34,18 +34,27 @@ fi
 
 echo "[BACKEND] Creating service account..."
 gcloud iam service-accounts create $BACKEND_SECRET_SA_NAME \
-    --description="Service account for accessing Secret Manager" \
-    --display-name="Backend Secret Access Service Account"
+    --description="Access Secret Manager and Cloud SQL Client" \
+    --display-name="Backend Service Account" \
+    --quiet
 
 echo "[BACKEND] Granting roles to the service account..."
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$BACKEND_SECRET_SA_EMAIL" \
-    --role="roles/secretmanager.secretAccessor"
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet
 
 echo "[BACKEND] Adding policy binding for service account user..."
 gcloud iam service-accounts add-iam-policy-binding $BACKEND_SECRET_SA_EMAIL \
     --member="user:$(gcloud config get-value account)" \
-    --role=roles/iam.serviceAccountUser
+    --role=roles/iam.serviceAccountUser \
+    --quiet
+
+echo "[BACKEND] Granting Cloud SQL Client role to the service account..."
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$BACKEND_SECRET_SA_EMAIL" \
+    --role="roles/cloudsql.client" \
+    --quiet
 
 echo "[BACKEND] Starting compute instance..."
 gcloud compute instances create $INSTANCE_NAME \
@@ -58,7 +67,10 @@ gcloud compute instances create $INSTANCE_NAME \
     --scopes=https://www.googleapis.com/auth/cloud-platform
 
 echo "[BACKEND] Adding firewall rules..."
-gcloud compute firewall-rules create rule-allow-tcp-5001 --source-ranges 0.0.0.0/0 --target-tags http-server --allow tcp:5001
+gcloud compute firewall-rules create rule-allow-tcp-5001 \
+    --source-ranges 0.0.0.0/0 \
+    --target-tags http-server \
+    --allow tcp:5001
 
 # Wait for instance to be ready
 echo "Waiting for instance to be ready..."
@@ -68,6 +80,7 @@ done
 
 echo "Copying files to $INSTANCE_NAME..."
 gcloud compute scp ./backend/secret.py $INSTANCE_NAME:~/ --zone=$ZONE --quiet
+gcloud compute scp ./backend/connect_connector.py $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 gcloud compute scp ./backend/server.py $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 gcloud compute scp ./backend/todolist.db $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 gcloud compute scp ./backend/requirements.txt $INSTANCE_NAME:~/ --zone=$ZONE --quiet
@@ -75,4 +88,6 @@ gcloud compute scp ./start_backend.sh $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 echo "Files copied successfully to $INSTANCE_NAME."
 
 echo "[BACKEND] Starting backend..."
-gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command "sudo ./start_backend.sh production $PROJECT_ID_NUM"
+gcloud compute ssh $INSTANCE_NAME \
+    --zone=$ZONE \
+    --command "sudo ./start_backend.sh production $PROJECT_ID_NUM"
