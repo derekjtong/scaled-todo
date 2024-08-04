@@ -1,27 +1,49 @@
 # for syntax details, see https://docs.docker.com/engine/reference/builder/
 # trick to get environment variables https://vsupalov.com/docker-build-pass-environment-variables/
 
-# Python
-FROM python:3
+# Stage 1: Install dependencies
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install
 
-# Build arguments
-ARG api_ip
+# Stage 2: Build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY . .
+COPY --from=deps /app/node_modules ./node_modules
+RUN npm run build
 
-# Environment variables
-ENV TODO_API_IP=${api_ip:-failed}
-
-# Install dependencies
-RUN pip install flask requests gunicorn
-
-# Expose 5000 
-EXPOSE 5000/tcp
-
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Set the working directory to /app
+# Stage 3: Run
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Run application using Gunicorn
-# CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "server:app"]
-CMD python server.py
+# Create user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+ENV NODE_ENV production
+
+# You only need to copy next.config.js if you are NOT using the default configuration
+# COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+USER nextjs
+
+ENV PORT=3000
+EXPOSE 3000
+
+# Environment variables
+ARG api_ip
+ENV TODO_API_IP=${api_ip:-failed}
+
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry.
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Start the Next.js application
+CMD ["npm", "run", "start"]
