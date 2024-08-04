@@ -15,7 +15,7 @@ docker run -d -p 5000:5000 --name scaled-todo $DOCKER_HUB_IMAGE_NAME
 # Optionally, you can add some tests here to verify the running container
 # For example, check if the app responds to a health check endpoint
 echo "Checking if the frontend is running locally..."
-until curl -s http://localhost:5000/health-check &> /dev/null; do
+until curl -s http://localhost:5000/health-check &>/dev/null; do
     echo "Frontend not yet running, waiting..."
     sleep 5
 done

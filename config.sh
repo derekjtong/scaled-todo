@@ -1,5 +1,6 @@
 # Variables for creating the VM
 PROJECT_ID="cisc5550-431018"
+PROJECT_ID_NUM=$(gcloud projects list --filter="$PROJECT_ID" --format="value(PROJECT_NUMBER)")
 ZONE="us-east4-a"
 REGION="us-east4"
 
@@ -11,6 +12,10 @@ IMAGE_PROJECT="ubuntu-os-cloud"
 BOOT_DISK_SIZE="200GB"
 TAGS="http-server"
 
+# Backend - GCP Secret Manager Service Account
+BACKEND_SECRET_SA_NAME="backend-secret-access-sa"
+BACKEND_SECRET_SA_EMAIL="$BACKEND_SECRET_SA_NAME@$PROJECT_ID.iam.gserviceaccount.com"
+
 # Docker
 DOCKER_HUB_IMAGE_NAME="derekjtong/scaled-todo"
 GCR_IMAGE_NAME="scaled-todo" # name on Google Container Registry
@@ -21,4 +26,3 @@ CLOUD_RUN_SERVICE_NAME="scaled-todo"
 # Frontend - GKE
 KUBERNETES_CLUSTER_NAME="cisc5550-cluster"
 KUBERENTES_DEPLOYMENT_NAME="todolist-app-frontend"
-
