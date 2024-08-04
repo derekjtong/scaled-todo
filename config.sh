@@ -1,5 +1,6 @@
 # Variables for creating the VM
 PROJECT_ID="cisc5550-431018"
+PROJECT_ID_NUM=$(gcloud projects list --filter="$PROJECT_ID" --format="value(PROJECT_NUMBER)")
 ZONE="us-east4-a"
 REGION="us-east4"
 

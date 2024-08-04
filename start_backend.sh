@@ -5,8 +5,11 @@ echo "Starting backend setup" >>/var/log/startup-script.log
 # Set FLASK_ENV based on the argument passed to the script
 if [ "$1" == "production" ]; then
     export FLASK_ENV=production
+    export PROJECT_ID_NUM="$2"
 else
+    source config.sh
     export FLASK_ENV=development
+    export PROJECT_ID_NUM=$PROJECT_ID_NUM
 fi
 echo "FLASK_ENV set to $FLASK_ENV" >>/var/log/startup-script.log
 

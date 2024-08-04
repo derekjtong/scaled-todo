@@ -67,9 +67,12 @@ while ! gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command="echo 'Instance
 done
 
 echo "Copying files to $INSTANCE_NAME..."
-gcloud compute scp --recurse ./backend $INSTANCE_NAME:~/ --zone=$ZONE --quiet
+gcloud compute scp ./backend/secret.py $INSTANCE_NAME:~/ --zone=$ZONE --quiet
+gcloud compute scp ./backend/server.py $INSTANCE_NAME:~/ --zone=$ZONE --quiet
+gcloud compute scp ./backend/todolist.db $INSTANCE_NAME:~/ --zone=$ZONE --quiet
+gcloud compute scp ./backend/requirements.txt $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 gcloud compute scp ./start_backend.sh $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 echo "Files copied successfully to $INSTANCE_NAME."
 
 echo "[BACKEND] Starting backend..."
-gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command "sudo ./start_backend.sh production"
+gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command "sudo ./start_backend.sh production $PROJECT_ID_NUM"

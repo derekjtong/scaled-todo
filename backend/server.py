@@ -10,7 +10,7 @@ import sqlite3
 import urllib
 import json
 import os
-import env
+import secret as secret
 
 DATABASE = "todolist.db"
 
@@ -73,7 +73,10 @@ def health_check():
 
 @app.route("/secret-check")
 def secret_check():
-    return jsonify(env.get_env_variable("my-secret"))
+    return jsonify(
+        secret.get_secret("test"),
+        os.environ.get("PROJECT_ID_NUM"),
+    )
 
 
 def get_db():
