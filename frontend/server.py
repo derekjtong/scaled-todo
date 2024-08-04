@@ -50,7 +50,7 @@ def mark_as_done(item):
 
 @app.route("/health-check")
 def health_check():
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "ok", "mode": os.environ.get("FLASK_ENV")})
 
 
 if __name__ == "__main__":

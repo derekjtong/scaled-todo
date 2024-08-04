@@ -25,7 +25,7 @@ app.config.from_object(__name__)
 
 @app.route("/")
 def health_check_1():
-    return jsonify({"status": "ok"})
+    return health_check()
 
 
 @app.route("/api/items")  # default method is GET
@@ -72,7 +72,7 @@ def update_item(item):
 
 @app.route("/health-check")
 def health_check():
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "ok", "mode": os.environ.get("FLASK_ENV")})
 
 
 def get_db():
