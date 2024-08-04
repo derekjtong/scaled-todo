@@ -23,5 +23,3 @@ docker push gcr.io/$PROJECT_ID/$GCR_IMAGE_NAME:latest
 
 echo "[FRONTEND] Deploying to Cloud Run..."
 gcloud run deploy $CLOUD_RUN_SERVICE_NAME --image gcr.io/$PROJECT_ID/$GCR_IMAGE_NAME:latest --platform managed --region $REGION --allow-unauthenticated
-
-echo "Deployment to Cloud Run completed."
