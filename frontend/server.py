@@ -5,7 +5,12 @@ import requests
 import os
 
 app = Flask(__name__)
-TODO_API_URL = "http://" + os.environ["TODO_API_IP"] + ":5001"
+
+# Determine if running in development or production mode
+if os.environ.get("FLASK_ENV") == "development":
+    TODO_API_URL = "http://localhost:5001"
+else:
+    TODO_API_URL = "http://" + os.environ["TODO_API_IP"] + ":5001"
 
 
 @app.route("/")

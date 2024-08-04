@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export FLASK_ENV=development
+
 apt-get update -y
 apt-get upgrade -y
 apt-get install -y wget
