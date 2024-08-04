@@ -19,7 +19,7 @@ gcloud compute instances create $INSTANCE_NAME \
 
 echo "[BACKEND] Adding firewall rules..."
 gcloud compute firewall-rules create rule-allow-tcp-5001 --source-ranges 0.0.0.0/0 --target-tags http-server --allow tcp:5001
-wait
+
 # Wait for instance ot be ready
 echo "Waiting for instance to be ready..."
 while ! gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command="echo 'Instance is up'" &> /dev/null; do
@@ -32,4 +32,4 @@ gcloud compute scp ./start_backend.sh $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 echo "Files copied successfully to $INSTANCE_NAME."
 
 echo "[BACKEND] Starting backend..."
-gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command "sudo ./start_backend.sh"
+gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command "sudo ./start_backend.sh production"

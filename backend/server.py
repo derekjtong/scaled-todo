@@ -1,19 +1,23 @@
 # RESTful API
 from flask import (
     Flask,
-    render_template,
-    redirect,
     g,
     request,
-    url_for,
     jsonify,
     Response,
 )
 import sqlite3
 import urllib
 import json
+import os
 
 DATABASE = "todolist.db"
+
+# Determine if running in development or production mode
+if os.environ.get("FLASK_ENV") == "development":
+    print("FLASK_ENV=development")
+else:
+    print("FLASK_ENV=production")
 
 app = Flask(__name__)
 app.config.from_object(__name__)

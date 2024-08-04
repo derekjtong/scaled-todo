@@ -8,8 +8,10 @@ app = Flask(__name__)
 
 # Determine if running in development or production mode
 if os.environ.get("FLASK_ENV") == "development":
+    print("FLASK_ENV=development")
     TODO_API_URL = "http://localhost:5001"
 else:
+    print("FLASK_ENV=production")
     TODO_API_URL = "http://" + os.environ["TODO_API_IP"] + ":5001"
 
 
