@@ -10,14 +10,10 @@ import sqlite3
 import urllib
 import json
 import os
+import env
 
 DATABASE = "todolist.db"
 
-# Determine if running in development or production mode
-if os.environ.get("FLASK_ENV") == "development":
-    print("FLASK_ENV=development")
-else:
-    print("FLASK_ENV=production")
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -73,6 +69,11 @@ def update_item(item):
 @app.route("/health-check")
 def health_check():
     return jsonify({"status": "ok", "mode": os.environ.get("FLASK_ENV")})
+
+
+@app.route("/secret-check")
+def secret_check():
+    return jsonify(env.get_env_variable("my-secret"))
 
 
 def get_db():

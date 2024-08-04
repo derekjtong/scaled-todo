@@ -4,10 +4,48 @@ source config.sh
 
 gcloud config set project $PROJECT_ID
 
-echo "Deleting existing resources..."
-gcloud compute instances delete $INSTANCE_NAME --zone=$ZONE --quiet
-gcloud compute firewall-rules delete rule-allow-tcp-5001 --quiet
-echo "Deleted existing resources."
+# Parameter "nd" to quickly redeploy without deleting existing resources
+if [[ "$1" == "nd" ]]; then
+    echo "Force quitting server..."
+    REMOTE_SCRIPT="
+    PIDS=\$(pgrep gunicorn);
+    if [ -z \"\$PIDS\" ]; then
+        echo 'No gunicorn processes are running.';
+    else
+        echo 'Killing the following gunicorn processes: \$PIDS';
+        sudo kill -9 \$PIDS;
+        echo 'gunicorn processes killed.';
+        # Verifying the processes are killed
+        NEW_PIDS=\$(pgrep gunicorn);
+        if [ -z \"\$NEW_PIDS\" ]; then
+            echo 'Verified: No gunicorn processes are running.';
+        else
+            echo 'Error: Some gunicorn processes are still running: \$NEW_PIDS';
+        fi
+    fi
+    "
+    gcloud compute ssh $INSTANCE_NAME --zone $ZONE --command "$REMOTE_SCRIPT"
+else
+    echo "Deleting existing resources..."
+    gcloud compute instances delete $INSTANCE_NAME --zone=$ZONE --quiet
+    gcloud compute firewall-rules delete rule-allow-tcp-5001 --quiet
+    echo "Deleted existing resources."
+fi
+
+echo "[BACKEND] Creating service account..."
+gcloud iam service-accounts create $BACKEND_SECRET_SA_NAME \
+    --description="Service account for accessing Secret Manager" \
+    --display-name="Backend Secret Access Service Account"
+
+echo "[BACKEND] Granting roles to the service account..."
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$BACKEND_SECRET_SA_EMAIL" \
+    --role="roles/secretmanager.secretAccessor"
+
+echo "[BACKEND] Adding policy binding for service account user..."
+gcloud iam service-accounts add-iam-policy-binding $BACKEND_SECRET_SA_EMAIL \
+    --member="user:$(gcloud config get-value account)" \
+    --role=roles/iam.serviceAccountUser
 
 echo "[BACKEND] Starting compute instance..."
 gcloud compute instances create $INSTANCE_NAME \
@@ -16,13 +54,15 @@ gcloud compute instances create $INSTANCE_NAME \
     --image-family=$IMAGE_FAMILY \
     --image-project=$IMAGE_PROJECT \
     --tags=$TAGS \
+    --service-account=$BACKEND_SECRET_SA_EMAIL \
+    --scopes=https://www.googleapis.com/auth/cloud-platform
 
 echo "[BACKEND] Adding firewall rules..."
 gcloud compute firewall-rules create rule-allow-tcp-5001 --source-ranges 0.0.0.0/0 --target-tags http-server --allow tcp:5001
 
-# Wait for instance ot be ready
+# Wait for instance to be ready
 echo "Waiting for instance to be ready..."
-while ! gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command="echo 'Instance is up'" &> /dev/null; do
+while ! gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command="echo 'Instance is up'" &>/dev/null; do
     sleep 1
 done
 
