@@ -24,6 +24,7 @@ if [[ "$1" == "nd" ]]; then
         fi
     fi
     "
+    sleep 3
     gcloud compute ssh $INSTANCE_NAME --zone $ZONE --command "$REMOTE_SCRIPT"
 else
     echo "Deleting existing resources..."
@@ -72,19 +73,54 @@ gcloud compute firewall-rules create rule-allow-tcp-5001 \
     --target-tags http-server \
     --allow tcp:5001
 
+gcloud compute firewall-rules create allow-http \
+    --description="Allow HTTP traffic on port 80" \
+    --direction=INGRESS \
+    --priority=1000 \
+    --network=default \
+    --action=ALLOW \
+    --rules=tcp:80 \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=http-server
+
+gcloud compute firewall-rules create allow-https \
+    --description="Allow HTTPS traffic on port 443" \
+    --direction=INGRESS \
+    --priority=1000 \
+    --network=default \
+    --action=ALLOW \
+    --rules=tcp:443 \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=https-server
+
 # Wait for instance to be ready
 echo "Waiting for instance to be ready..."
 while ! gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command="echo 'Instance is up'" &>/dev/null; do
     sleep 1
 done
 
+# Check if existing certificates are still valid
+CERT_VALID=true
+if gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command="openssl x509 -checkend 86400 -noout -in ~/cert.pem" &>/dev/null; then
+    echo "Certificate is still valid for at least 24 hours."
+else
+    echo "Certificate is expired or not found, generating a new one..."
+    CERT_VALID=false
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout selfsigned.key -out selfsigned.crt -subj "/CN=localhost"
+fi
+
 echo "Copying files to $INSTANCE_NAME..."
 gcloud compute scp ./backend/secret.py $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 gcloud compute scp ./backend/connect_connector.py $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 gcloud compute scp ./backend/server.py $INSTANCE_NAME:~/ --zone=$ZONE --quiet
-gcloud compute scp ./backend/todolist.db $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 gcloud compute scp ./backend/requirements.txt $INSTANCE_NAME:~/ --zone=$ZONE --quiet
 gcloud compute scp ./start_backend.sh $INSTANCE_NAME:~/ --zone=$ZONE --quiet
+
+if [[ "$CERT_VALID" == "false" ]]; then
+    gcloud compute scp ./selfsigned.crt $INSTANCE_NAME:~/cert.pem --zone=$ZONE --quiet
+    gcloud compute scp ./selfsigned.key $INSTANCE_NAME:~/key.pem --zone=$ZONE --quiet
+fi
+
 echo "Files copied successfully to $INSTANCE_NAME."
 
 echo "[BACKEND] Starting backend..."

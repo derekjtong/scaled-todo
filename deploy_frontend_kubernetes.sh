@@ -8,7 +8,7 @@ echo "Deleted existing resources."
 
 # Confirm the backend is running
 echo "Checking if backend is running..."
-until gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command="curl -s http://localhost:5001/health-check" &>/dev/null; do
+until gcloud compute ssh $INSTANCE_NAME --zone=$ZONE --command="curl -k https://localhost:5001/health-check" &>/dev/null; do
     echo "Backend not yet running, waiting..."
     sleep 5
 done

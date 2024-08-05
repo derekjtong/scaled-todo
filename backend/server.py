@@ -136,10 +136,12 @@ def health_check():
 @app.route("/secret-check")
 def secret_check():
     return jsonify(
-        secret.get_secret("test"),
-        os.environ.get("PROJECT_ID_NUM"),
+        secret.get_secret("test"), os.environ.get("PROJECT_ID_NUM"), "hello https!"
     )
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", port=5001)
+    if os.getenv("FLASK_ENV") == "production":
+        app.run("0.0.0.0", port=5001, ssl_context=("cert.pem", "key.pem"))
+    else:
+        app.run("0.0.0.0", port=5001)

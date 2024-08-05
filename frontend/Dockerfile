@@ -15,7 +15,7 @@ COPY --from=deps /app/node_modules ./node_modules
 
 # Environment variables
 ARG api_ip
-ENV NEXT_PUBLIC_TODO_API_URL=http://${api_ip}:5001
+ENV NEXT_PUBLIC_TODO_API_URL=https://${api_ip}:5001
 RUN npm run build
 
 # Stage 3: Run
