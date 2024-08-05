@@ -12,6 +12,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
+
+# Environment variables
+ARG api_ip
+ENV NEXT_PUBLIC_TODO_API_URL=http://${api_ip}:5001
 RUN npm run build
 
 # Stage 3: Run
@@ -22,7 +26,7 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # You only need to copy next.config.js if you are NOT using the default configuration
 # COPY --from=builder /app/next.config.js ./
@@ -36,14 +40,10 @@ USER nextjs
 ENV PORT=3000
 EXPOSE 3000
 
-# Environment variables
-ARG api_ip
-ENV TODO_API_IP=${api_ip:-failed}
-
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry.
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Start the Next.js application
 CMD ["npm", "run", "start"]
