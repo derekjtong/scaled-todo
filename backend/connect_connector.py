@@ -22,7 +22,6 @@ import sqlalchemy
 
 
 def connect_with_connector() -> sqlalchemy.engine.base.Engine:
-    print("Using the connector")
     """
     Initializes a connection pool for a Cloud SQL instance of MySQL.
 

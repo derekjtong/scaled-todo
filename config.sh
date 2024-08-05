@@ -10,7 +10,7 @@ MACHINE_TYPE="e2-medium"
 IMAGE_FAMILY="ubuntu-2004-lts"
 IMAGE_PROJECT="ubuntu-os-cloud"
 BOOT_DISK_SIZE="200GB"
-TAGS="http-server"
+TAGS="https-server,http-server"
 
 # Backend - GCP Secret Manager Service Account
 BACKEND_SECRET_SA_NAME="backend-secret-access-sa"

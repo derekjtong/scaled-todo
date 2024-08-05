@@ -1,0 +1,23 @@
+# Ignore node_modules except for package.json and package-lock.json
+node_modules
+!package.json
+!package-lock.json
+
+# Ignore local development and build directories
+.next
+out
+
+# Ignore other unneeded files and directories
+.DS_Store
+.git
+.gitignore
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+npm-debug.log
+yarn-error.log
+.vscode
+.idea
+*.swp
