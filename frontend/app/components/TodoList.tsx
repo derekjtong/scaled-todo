@@ -1,7 +1,7 @@
 "use client";
 import { TODO_API_URL } from "@/lib/config";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TodoItem from "./TodoItem";
 
 interface TodoItemType {
@@ -13,15 +13,20 @@ interface TodoItemType {
 
 interface TodoListProps {
   initialItems: TodoItemType[];
+  isLoading: boolean;
 }
 
-const TodoList: React.FC<TodoListProps> = ({ initialItems }) => {
+const TodoList: React.FC<TodoListProps> = ({ initialItems, isLoading }) => {
   const [items, setItems] = useState<TodoItemType[]>(initialItems);
   const [showForm, setShowForm] = useState(false);
   const [newTodo, setNewTodo] = useState("");
   const [dueDate, setDueDate] = useState("");
 
   const toggleForm = () => setShowForm(!showForm);
+
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
 
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,26 +55,30 @@ const TodoList: React.FC<TodoListProps> = ({ initialItems }) => {
   return (
     <div className="container mx-auto p-4">
       <h3 className="text-2xl font-bold mb-4">Oh, so many things to do...</h3>
-      <table className="table-auto w-full mb-4">
-        <tbody>
-          {items.length > 0 ? (
-            items.map((entry) => (
-              <TodoItem
-                key={entry.id}
-                entry={entry}
-                deleteItem={deleteItem}
-                markAsDone={markAsDone}
-              />
-            ))
-          ) : (
-            <tr>
-              <td className="p-4 text-center italic">
-                Unbelievable. Nothing to do for now.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      {isLoading ? (
+        <div className="mb-4">Loading...</div>
+      ) : (
+        <table className="table-auto w-full mb-4">
+          <tbody>
+            {items.length > 0 ? (
+              items.map((entry) => (
+                <TodoItem
+                  key={entry.id}
+                  entry={entry}
+                  deleteItem={deleteItem}
+                  markAsDone={markAsDone}
+                />
+              ))
+            ) : (
+              <tr>
+                <td className="p-4 text-center italic">
+                  Unbelievable. Nothing to do for now.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
       <button
         onClick={toggleForm}
         id="toggle_button"
