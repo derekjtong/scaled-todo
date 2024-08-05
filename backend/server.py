@@ -1,22 +1,20 @@
-# RESTful API
 from flask import (
     Flask,
-    g,
     request,
     jsonify,
     Response,
 )
-import sqlite3
-import urllib
 import json
 import os
 import secret as secret
 import sqlalchemy
 from connect_connector import connect_with_connector
+from flask_cors import CORS
 
 SQLLITE3_DATABASE = "todolist.db"
 
 app = Flask(__name__)
+CORS(app)
 app.config.from_object(__name__)
 
 
@@ -63,14 +61,15 @@ def health_check_1():
 def get_items():
     with cloud_db.connect() as conn:
         result = conn.execute(
-            sqlalchemy.text("SELECT what_to_do, due_date, status FROM entries")
+            sqlalchemy.text("SELECT id, what_to_do, due_date, status FROM entries")
         )
         entries = result.fetchall()
         tdlist = [
             dict(
-                what_to_do=row[0],
-                due_date=row[1],
-                status=row[2],
+                id=row[0],
+                what_to_do=row[1],
+                due_date=row[2],
+                status=row[3],
             )
             for row in entries
         ]
@@ -80,9 +79,9 @@ def get_items():
 @app.route("/api/items", methods=["POST"])
 def add_item():
     with cloud_db.connect() as conn:
-        conn.execute(
+        result = conn.execute(
             sqlalchemy.text(
-                "insert into entries (what_to_do, due_date) values (:what_to_do, :due_date)"
+                "INSERT INTO entries (what_to_do, due_date) VALUES (:what_to_do, :due_date)"
             ),
             {
                 "what_to_do": request.json["what_to_do"],
@@ -90,28 +89,40 @@ def add_item():
             },
         )
         conn.commit()
-        return jsonify({"result": True})
+
+        # Fetch the newly created item to return it
+        new_item = conn.execute(
+            sqlalchemy.text(
+                "SELECT id, what_to_do, due_date, status FROM entries WHERE id = LAST_INSERT_ID()"
+            )
+        ).fetchone()
+
+        new_item_dict = {
+            "id": new_item[0],
+            "what_to_do": new_item[1],
+            "due_date": new_item[2],
+            "status": new_item[3],
+        }
+        return jsonify(new_item_dict)
 
 
-@app.route("/api/items/<item>", methods=["DELETE"])
-def delete_item(item):
+@app.route("/api/items/<int:item_id>", methods=["DELETE"])
+def delete_item(item_id):
     with cloud_db.connect() as conn:
         conn.execute(
-            sqlalchemy.text("DELETE FROM entries WHERE what_to_do=:what_to_do"),
-            {"what_to_do": item},
+            sqlalchemy.text("DELETE FROM entries WHERE id=:id"),
+            {"id": item_id},
         )
         conn.commit()
         return jsonify({"result": True})
 
 
-@app.route("/api/items/<item>", methods=["PUT"])
-def update_item(item):
+@app.route("/api/items/<int:item_id>", methods=["PUT"])
+def update_item(item_id):
     with cloud_db.connect() as conn:
         conn.execute(
-            sqlalchemy.text(
-                "UPDATE entries SET status='done' WHERE what_to_do=:what_to_do"
-            ),
-            {"what_to_do": item},
+            sqlalchemy.text("UPDATE entries SET status='done' WHERE id=:id"),
+            {"id": item_id},
         )
         conn.commit()
         return jsonify({"result": True})
