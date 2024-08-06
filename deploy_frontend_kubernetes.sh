@@ -30,7 +30,7 @@ gcloud container clusters create $KUBERNETES_CLUSTER_NAME --zone=$ZONE
 gcloud container clusters get-credentials $KUBERNETES_CLUSTER_NAME --zone=$ZONE
 
 echo "[FRONTEND] Deploying to GKE..."
-kubectl create deployment $KUBERENTES_DEPLOYMENT_NAME --image=derekjtong/scaled-todo --port=5000
+kubectl create deployment $KUBERENTES_DEPLOYMENT_NAME --image=derekjtong/scaled-todo --port=3000
 kubectl expose deployment $KUBERENTES_DEPLOYMENT_NAME --type="LoadBalancer"
 
 watch kubectl get service $KUBERENTES_DEPLOYMENT_NAME
