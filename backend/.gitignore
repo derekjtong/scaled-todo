@@ -164,3 +164,5 @@ cython_debug/
 # SSL certificates
 cert.pem
 key.pem
+selfsigned.crt
+selfsigned.key

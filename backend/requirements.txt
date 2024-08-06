@@ -42,3 +42,6 @@ typing_extensions==4.12.2
 urllib3==2.2.2
 Werkzeug==3.0.3
 yarl==1.9.4
+flask_jwt_extended==4.6.0
+bcrypt==4.2.0
+pyopenssl==24.2.1

@@ -1,13 +1,10 @@
 import os
 from google.cloud import secretmanager
 
-
-PROJECT_ID = int(
-    os.environ.get("PROJECT_ID_NUM"),
-)
+PROJECT_ID = int(os.environ.get("PROJECT_ID_NUM"))
 
 
-def get_secret(key):
+def get_secret(key: str) -> str:
     if os.environ.get("FLASK_ENV") == "production":
         secret_manager_key = (
             f"projects/{PROJECT_ID}/secrets/scaled-todo-prod-{key}/versions/latest"

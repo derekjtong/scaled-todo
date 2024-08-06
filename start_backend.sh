@@ -24,9 +24,10 @@ apt-get install -y python3-pip
 
 pip3 install --upgrade -r requirements.txt
 
-# Use unicorn for production
+# Use gunicorn for production
 if [ "$FLASK_ENV" == "production" ]; then
-    gunicorn -w 4 -b 0.0.0.0:5001 server:app --certfile cert.pem --keyfile key.pem
+    # python3 run.py
+    gunicorn -w 4 -b 0.0.0.0:5001 run:app --certfile cert.pem --keyfile key.pem
 else
-    python3 server.py
+    python3 run.py
 fi
