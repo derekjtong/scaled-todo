@@ -35,7 +35,7 @@ export function SignUpForm({ className, ...props }: UserAuthFormProps) {
       const response = await signupUser(userData);
       login(response.data.token);
       router.push("/");
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response.data.message);
     } finally {
       setIsLoading(false);

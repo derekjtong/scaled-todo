@@ -26,7 +26,7 @@ export function SignInForm({ className, ...props }: UserAuthFormProps) {
       const response = await loginUser({ username, password });
       login(response.data.token);
       router.push("/");
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response.data.message);
     } finally {
       setIsLoading(false);
