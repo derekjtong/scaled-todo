@@ -1,30 +1,22 @@
 "use client";
-import { TODO_API_URL } from "@/lib/config";
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useAuthContext } from "@/components/providers/auth-provider";
 import TodoList from "./components/TodoList";
 
 export default function Home() {
-  const [initialItems, setInitialItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuthContext();
 
-  async function fetchTodoItems() {
-    const res = await axios.get(`${TODO_API_URL}/api/items`);
-    setIsLoading(false);
-    return res.data;
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <h2 className="mb-4 text-2xl font-semibold">Scaled Todo</h2>
+        <p className="mb-4">Welcome</p>
+      </div>
+    );
   }
-
-  useEffect(() => {
-    async function loadData() {
-      const items = await fetchTodoItems();
-      setInitialItems(items);
-    }
-    loadData();
-  }, []);
 
   return (
     <main className="min-h-screen bg-gray-100 p-4">
-      <TodoList initialItems={initialItems} isLoading={isLoading} />
+      <TodoList />
     </main>
   );
 }
