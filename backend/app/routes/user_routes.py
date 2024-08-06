@@ -11,16 +11,16 @@ engine = connect_with_connector()
 @jwt_required()
 def get_own_user_profile():
     try:
-        user_id = get_jwt_identity()["_id"]  # Extract user ID from the JWT token
+        uid = get_jwt_identity()["uid"]
 
         with engine.connect() as conn:
             result = conn.execute(
-                text("SELECT * FROM users WHERE id = :user_id"), {"user_id": user_id}
+                text("SELECT * FROM users WHERE uid = :uid"), {"uid": uid}
             ).fetchone()
 
         if result:
             user_profile = {
-                "id": result[0],
+                "uid": result[0],
                 "username": result[1],
                 "email": result[2],
                 "is_admin": result[4],

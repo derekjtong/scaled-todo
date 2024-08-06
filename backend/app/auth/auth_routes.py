@@ -22,7 +22,7 @@ def login():
         ).fetchone()
 
     if result and compare_password(data["password"], result[3]):
-        token = generate_token({"_id": result[0], "is_admin": result[4]})
+        token = generate_token({"uid": result[0], "is_admin": result[4]})
         return jsonify(message="User is valid", token=token)
     return jsonify(message="Invalid username or password"), 401
 
@@ -62,9 +62,9 @@ def signup():
             {"username": data["username"]},
         ).fetchone()
 
-    token = generate_token({"_id": new_user[0], "is_admin": new_user[4]})
+    token = generate_token({"uid": new_user[0], "is_admin": new_user[4]})
     return jsonify(
-        id=new_user[0],
+        uid=new_user[0],
         username=new_user[1],
         email=new_user[2],
         is_admin=new_user[4],

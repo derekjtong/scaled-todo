@@ -9,7 +9,7 @@ def migrate_db(db: sqlalchemy.engine.base.Engine) -> None:
             sqlalchemy.text(
                 """
                 CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    uid INTEGER PRIMARY KEY AUTO_INCREMENT,
                     username VARCHAR(255) UNIQUE NOT NULL,
                     email VARCHAR(255) UNIQUE NOT NULL,
                     password VARCHAR(255) NOT NULL,
@@ -23,10 +23,12 @@ def migrate_db(db: sqlalchemy.engine.base.Engine) -> None:
             sqlalchemy.text(
                 """
                 CREATE TABLE IF NOT EXISTS entries (
-                    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    eid INTEGER PRIMARY KEY AUTO_INCREMENT,
                     what_to_do TEXT NOT NULL,
                     due_date TEXT NOT NULL,
-                    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+                    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                    uid INTEGER NOT NULL,
+                    FOREIGN KEY (uid) REFERENCES users(uid)
                 )
                 """
             )

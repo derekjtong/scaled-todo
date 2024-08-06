@@ -1,7 +1,9 @@
+import { Todo } from "@/types/Entry";
+
 interface TodoItemProps {
-  entry: TodoItemType;
-  deleteItem: (item: TodoItemType) => void;
-  markAsDone: (item: TodoItemType) => void;
+  entry: Todo;
+  deleteItem: (item: Todo) => void;
+  markAsDone: (item: Todo) => void;
 }
 
 const TodoItem: React.FC<TodoItemProps> = ({ entry, deleteItem, markAsDone }) => {

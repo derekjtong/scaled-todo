@@ -2,6 +2,7 @@ import os
 from flask import Blueprint, request, jsonify, Response
 import json
 import sqlalchemy
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..db.connect_connector import connect_with_connector
 from ..db.migrations import migrate_db
 from ..utils.secret_manager import get_secret
@@ -30,71 +31,87 @@ def health_check_1():
 
 
 @todolist_bp.route("/api/items")
+@jwt_required()
 def get_items():
+    uid = get_jwt_identity()["uid"]
     with cloud_db.connect() as conn:
         result = conn.execute(
-            sqlalchemy.text("SELECT id, what_to_do, due_date, status FROM entries")
+            sqlalchemy.text(
+                "SELECT eid, what_to_do, due_date, status FROM entries WHERE uid = :uid"
+            ),
+            {"uid": uid},
         )
         entries = result.fetchall()
         tdlist = [
             dict(
-                id=row[0],
+                eid=row[0],
                 what_to_do=row[1],
                 due_date=row[2],
                 status=row[3],
             )
             for row in entries
         ]
-        return Response(json.dumps(tdlist), mimetype="application/json")
+        response = {"todos": tdlist}
+        return jsonify(response)
 
 
 @todolist_bp.route("/api/items", methods=["POST"])
+@jwt_required()
 def add_item():
+    uid = get_jwt_identity()["uid"]
     with cloud_db.connect() as conn:
         result = conn.execute(
             sqlalchemy.text(
-                "INSERT INTO entries (what_to_do, due_date) VALUES (:what_to_do, :due_date)"
+                "INSERT INTO entries (what_to_do, due_date, uid) VALUES (:what_to_do, :due_date, :uid)"
             ),
             {
                 "what_to_do": request.json["what_to_do"],
                 "due_date": request.json["due_date"],
+                "uid": uid,
             },
         )
         conn.commit()
 
-        # Fetch the newly created item to return it
         new_item = conn.execute(
             sqlalchemy.text(
-                "SELECT id, what_to_do, due_date, status FROM entries WHERE id = last_insert_rowid()"
-            )
+                "SELECT eid, what_to_do, due_date, status FROM entries WHERE eid = LAST_INSERT_ID() AND uid = :uid"
+            ),
+            {"uid": uid},
         ).fetchone()
 
         new_item_dict = {
-            "id": new_item[0],
+            "eid": new_item[0],
             "what_to_do": new_item[1],
             "due_date": new_item[2],
             "status": new_item[3],
         }
-        return jsonify(new_item_dict)
+        response = {"todo": new_item_dict}
+        return jsonify(response)
 
 
 @todolist_bp.route("/api/items/<int:item_id>", methods=["DELETE"])
+@jwt_required()
 def delete_item(item_id):
+    uid = get_jwt_identity()["uid"]
     with cloud_db.connect() as conn:
         conn.execute(
-            sqlalchemy.text("DELETE FROM entries WHERE id=:id"),
-            {"id": item_id},
+            sqlalchemy.text("DELETE FROM entries WHERE eid=:eid AND uid = :uid"),
+            {"eid": item_id, "uid": uid},
         )
         conn.commit()
         return jsonify({"result": True})
 
 
 @todolist_bp.route("/api/items/<int:item_id>", methods=["PUT"])
+@jwt_required()
 def update_item(item_id):
+    uid = get_jwt_identity()["uid"]
     with cloud_db.connect() as conn:
         conn.execute(
-            sqlalchemy.text("UPDATE entries SET status='done' WHERE id=:id"),
-            {"id": item_id},
+            sqlalchemy.text(
+                "UPDATE entries SET status='done' WHERE eid=:eid AND uid = :uid"
+            ),
+            {"eid": item_id, "uid": uid},
         )
         conn.commit()
         return jsonify({"result": True})

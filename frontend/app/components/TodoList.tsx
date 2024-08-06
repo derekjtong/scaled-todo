@@ -1,54 +1,78 @@
 "use client";
+import { addTodo, deleteTodo, getTodos, markDoneTodo } from "@/api/entries";
+import { useAuthContext } from "@/components/providers/auth-provider";
 import { Spinner } from "@/components/Spinner";
-import { TODO_API_URL } from "@/lib/config";
-import axios from "axios";
+import { Todo, TodosResponse } from "@/types/Entry";
+import { AxiosResponse } from "axios";
 import { useEffect, useState } from "react";
 import TodoItem from "./TodoItem";
 
-interface TodoItemType {
-  id: number;
-  what_to_do: string;
-  due_date: string;
-  status: string;
-}
-
-interface TodoListProps {
-  initialItems: TodoItemType[];
-  isLoading: boolean;
-}
-
-const TodoList: React.FC<TodoListProps> = ({ initialItems, isLoading }) => {
-  const [items, setItems] = useState<TodoItemType[]>(initialItems);
+const TodoList = () => {
+  const { authToken } = useAuthContext();
+  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<Todo[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [newTodo, setNewTodo] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [error, setError] = useState("");
 
   const toggleForm = () => setShowForm(!showForm);
 
   useEffect(() => {
-    setItems(initialItems);
-  }, [initialItems]);
+    setIsLoading(true);
+    const fetchTodos = async () => {
+      await getTodos(authToken || "")
+        .then((response: AxiosResponse<TodosResponse>) => {
+          console.log("todos", response.data);
+          setItems(response.data.todos);
+        })
+        .catch((err) => {
+          setError("Error fetching todos: " + err.message);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    };
+    fetchTodos();
+  }, [authToken]);
 
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await axios.post(`${TODO_API_URL}/api/items`, {
+
+    const todo: Todo = {
       what_to_do: newTodo,
       due_date: dueDate,
-    });
-    setItems([...items, response.data]);
-    setNewTodo("");
-    setDueDate("");
-    toggleForm();
+    };
+    try {
+      const response = await addTodo(authToken || "", todo);
+      console.log("adding todo", response.data.todo);
+      setItems([...items, response.data.todo]);
+      console.log("added to arr");
+
+      setNewTodo("");
+      setDueDate("");
+      toggleForm();
+    } catch (err: any) {
+      setError("Error adding todo: " + err.message);
+    }
   };
 
-  const deleteItem = async (item: TodoItemType) => {
-    await axios.delete(`${TODO_API_URL}/api/items/${item.id}`);
-    setItems(items.filter((i) => i.id !== item.id));
+  const deleteItem = async (item: Todo) => {
+    try {
+      const response = await deleteTodo(authToken || "", item);
+    } catch (err: any) {
+      setError("Error adding todo: " + err.message);
+    }
+    setItems(items.filter((i) => i.eid !== item.eid));
   };
 
-  const markAsDone = async (item: TodoItemType) => {
-    await axios.put(`${TODO_API_URL}/api/items/${item.id}`);
-    setItems(items.map((i) => (i.id === item.id ? { ...i, status: "done" } : i)));
+  const markAsDone = async (item: Todo) => {
+    try {
+      const response = await markDoneTodo(authToken || "", item);
+    } catch (err: any) {
+      setError("Error adding todo: " + err.message);
+    }
+    setItems(items.map((i) => (i.eid === item.eid ? { ...i, status: "done" } : i)));
   };
 
   return (
@@ -63,8 +87,8 @@ const TodoList: React.FC<TodoListProps> = ({ initialItems, isLoading }) => {
       ) : (
         <table className="mb-4 w-full table-auto">
           <tbody>
-            {items.length > 0 ? (
-              items.map((entry) => <TodoItem key={entry.id} entry={entry} deleteItem={deleteItem} markAsDone={markAsDone} />)
+            {items?.length > 0 ? (
+              items.map((entry) => <TodoItem key={entry.eid} entry={entry} deleteItem={deleteItem} markAsDone={markAsDone} />)
             ) : (
               <tr>
                 <td className="p-4 text-center italic">Unbelievable. Nothing to do for now.</td>
