@@ -41,11 +41,14 @@ Selected items:
   * gunicorn
   * Cloud SQL Python connector
   * Google Secret Manager
+  * Flask-JWT-Extended
+  * bcrypt
 * Frontend
   * Nodejs
   * Nextjs
   * Typescript
   * Tailwind CSS
+  * shadcn/ui
 * Deployment
   * Cloud SQL
   * Compute Engine
