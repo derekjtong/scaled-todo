@@ -12,7 +12,7 @@ Required for local as well
 1. `./start_backend.sh`
 2. `./start_frontend.sh`
 
-### Deploy
+### Prod Environment
 1. Install gcloud and authenticate
 2. Adjust `config.sh` to your information
 3. Run `chmod +x <file_name>` as needed for the script files below
